@@ -1,0 +1,32 @@
+# Configuracion de la aplicacion
+
+
+# Identificacion del servicio 
+spring:
+  application:
+    name: 'calidaddelaire'
+
+server:
+  address: '0.0.0.0'
+  port: 8080
+
+# Binding health checks to a different port
+management:
+  address: '0.0.0.0'
+  port: 8081
+  security.enabled: false
+
+# Disable all management enpoints except health
+endpoints:
+  enabled: false
+  health:
+    enabled: false
+
+# The application configuration properties
+quickstart:
+  generateOrderPeriod: '10s'
+  processOrderPeriod: '30s'
+      
+# logging
+logging:
+  config: 'classpath:logback.xml'
