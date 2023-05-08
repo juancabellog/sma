@@ -2,8 +2,8 @@ import json;
 import geopandas;
 import threading;
 from connect_db import getConnect;
-from validaciones_normtivas import validaciones_normativa;
-from dateutil.parser import parse;
+from validaciones_normtivas import guardar_datos_y_validar;
+from dateutil.parser import parse
 from shapely.geometry import Point;
 
 
@@ -134,7 +134,7 @@ def valida_archivo(params):
                     else:
                         row['rowStatus'] = 'OK'
         if (not rechazaArchivo):
-            thread = threading.Thread(target=validaciones_normativa, args=(excelFile, codigoTipoArchivo))
+            thread = threading.Thread(target=guardar_datos_y_validar, args=(excelFile, codigoTipoArchivo))
             thread.start()
             
         return {'resultado': 'OK', 'errores': errores, 'rechazaArchivo': rechazaArchivo};

@@ -1,5 +1,6 @@
 import json;
 from connect_db import getConnect;
+from notificaciones import notificar
 
 def getValidadores(conn, codigoTipoArchivo):
     cur = conn.cursor()
@@ -61,30 +62,34 @@ def validaArchivo(excelFile, validacion):
                 superior = parametroLimite['superior']
                 uMedida = parametroLimite['uMedida']
                 if (uMedida != unidadMedida):
-                    print(puntoMonitoreo, parametro, 'Unidad de Medida informada', unidadMedida, 'difiere de la registrada en limite ', uMedida, 'en fila', r)
+                    notificar ('ALERTA', puntoMonitoreo, parametro, 'Unidad de Medida informada', unidadMedida, 'difiere de la registrada en limite ', uMedida, 'en fila', r)
                 if (inferior != None):
                     if (valor < inferior):
-                        print(puntoMonitoreo, parametro, 'Alerta valor', valor, 'menor que limite inferior ', inferior, 'en fila', r)
+                        notificar ('ALERTA', puntoMonitoreo, parametro, 'Alerta valor', valor, 'menor que limite inferior ', inferior, 'en fila', r)
                 if (superior != None):
                     if (valor > superior):
-                        print(puntoMonitoreo, parametro, 'Alerta valor', valor, 'mayor que limite superior', superior, 'en fila', r)
+                        notificar ('ALERTA', puntoMonitoreo, parametro, 'Alerta valor', valor, 'mayor que limite superior', superior, 'en fila', r)
             except (Exception) as error:
-                print('ERROR: Parametro no encontrado en limites:', parametro, 'para Punto monitoreo', puntoMonitoreo)
+                notificar ('ERROR: Parametro no encontrado en limites:', parametro, 'para Punto monitoreo', puntoMonitoreo)
                 
         
     else:
         print('validacion:', tipoValidacion, ' no implementada')
         
-def validaciones_normativa(excelFile, codigoTipoArchivo):
-    conn = None
-    try:
-        conn = getConnect() 
-        guardarDatos(conn, excelFile)        
+    
+def validaciones_normativa(conn, excelFile, codigoTipoArchivo):
         validaciones = getValidadores(conn, codigoTipoArchivo)
         
         for validacion in validaciones:
             validaArchivo(excelFile, validacion)
         
+def guardar_datos_y_validar(excelFile, codigoTipoArchivo):
+    conn = None
+    try:
+        conn = getConnect() 
+        guardarDatos(conn, excelFile)        
+        validaciones_normativa(conn, excelFile, codigoTipoArchivo)
     finally:
         if conn is not None:
             conn.close()    
+        
