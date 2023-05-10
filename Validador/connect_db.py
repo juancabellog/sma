@@ -5,6 +5,9 @@ from pymongo import MongoClient
 config = configparser.RawConfigParser()
 config.read('app.config')
 
+def getProperty(section, option):
+    return config.get(section, option)
+
 def getConnect():
     return psycopg2.connect("host=" + config.get('DatabaseSection', 'database.host') 
                             + " dbname=" + config.get('DatabaseSection', 'database.dbname') 
