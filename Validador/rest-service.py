@@ -1,8 +1,9 @@
 from flask import Flask, request, jsonify
 from validador import valida_archivo
-from promedios import calculaPromediosPorHora, calculaPromediosActuales
-from analitica import generaAnalitica
-from analiticaIA import generaAnaliticaIA
+from aire.promedios import calculaPromediosPorHora, calculaPromediosActuales
+from aire.analitica import generaAnalitica
+from aire.analiticaIA import generaAnaliticaIA
+from aire.validaciones_normativas import valida_normativas_aire
 from connect_db import getConnect
 from pandas import DataFrame
 
@@ -45,3 +46,14 @@ def analiticaIA():
         if (len(df) > 0):
             df.columns = ['ufId', 'idProceso', 'fecha', 'parametro', 'valor']
         return generaAnaliticaIA(df)
+
+@app.get("/validacionesNormativas")
+def validacionesNormativasAire():
+    with getConnect() as conn:
+        cur = conn.cursor()
+        cur.execute("SELECT dpr_ufid, dpr_idproceso, dpr_fecha, dpr_prm_codigo, dpr_valor from datos_promedios")
+        df = DataFrame(cur.fetchall())
+        cur.close()        
+        if (len(df) > 0):
+            df.columns = ['ufId', 'idProceso', 'fecha', 'parametro', 'valor']
+        return valida_normativas_aire(df)
