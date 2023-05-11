@@ -47,7 +47,7 @@ def analiticaIA():
             df.columns = ['ufId', 'idProceso', 'fecha', 'parametro', 'valor']
         return generaAnaliticaIA(df)
 
-@app.get("/validacionesNormativas")
+@app.get("/validacionesNormativasAire")
 def validacionesNormativasAire():
     with getConnect() as conn:
         cur = conn.cursor()
