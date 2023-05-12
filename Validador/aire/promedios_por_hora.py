@@ -2,4 +2,5 @@
 def promedios(data):
     print('entra a promnedios:', len(data))
     print(data)
+    return 'OK'
    

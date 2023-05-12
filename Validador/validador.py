@@ -2,7 +2,7 @@ import json;
 import geopandas;
 import threading;
 from connect_db import getConnect;
-from validaciones_normtivas import guardar_datos_y_validar;
+from agua.validaciones_normativas import guardar_datos_y_validar;
 from dateutil.parser import parse
 from shapely.geometry import Point;
 

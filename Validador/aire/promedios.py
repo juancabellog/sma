@@ -1,4 +1,4 @@
-from promedios_por_hora import promedios
+from aire.promedios_por_hora import promedios
 from datetime import datetime, timedelta
 from connect_db import getMongoConnection, getConnect, getProperty
 import pandas as pd
@@ -62,7 +62,7 @@ def calculaPromediosPorHora(fecha:str, hora:str):
 def calculaPromediosActuales():
     with getConnect() as conn:
         cur = conn.cursor()
-        cur.execute("SELECT max(dpr_fecha) as fecha from datos_promedios");
+        cur.execute("SELECT max(dpr_fecha) as fecha from datos_promedios")
         fechas = cur.fetchone()
         cur.close()        
         fecha = fechas[0]
@@ -77,3 +77,4 @@ def calculaPromediosActuales():
                 fecha = fecha + timedelta(hours=1)
                 calculaPromedios(db, fechaInicial, fecha)
     return 'OK'
+
