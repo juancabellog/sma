@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 from validador import valida_archivo
-from aire.promedios import calculaPromediosPorHora, calculaPromediosActuales
+from aire.promedios import calculaPromediosPorHora, calculaUltimosPromedios
 from aire.analitica import generaAnalitica
 from aire.analiticaIA import generaAnaliticaIA
 from aire.validaciones_normativas import valida_normativas_aire
@@ -22,9 +22,9 @@ def validaArchivo():
 def promediosPorHora():
     return jsonify(calculaPromediosPorHora(request.args.get('fecha'), request.args.get('hora')))
 
-@app.get("/promediosActuales")
+@app.get("/ultimosPromedios")
 def promediosActuales():
-    return calculaPromediosActuales()
+    return calculaUltimosPromedios()
         
 @app.get("/analitica")
 def analitica():

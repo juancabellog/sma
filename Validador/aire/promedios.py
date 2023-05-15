@@ -59,7 +59,7 @@ def calculaPromediosPorHora(fecha:str, hora:str):
         db = mongo.ExportData
         return calculaPromedios(db, fechaInicial, fechaFinal)
 
-def calculaPromediosActuales():
+def calculaUltimosPromedios():
     with getConnect() as conn:
         cur = conn.cursor()
         cur.execute("SELECT max(dpr_fecha) as fecha from datos_promedios")
