@@ -3,21 +3,6 @@ import pandas as pd
 import numpy as np
 
 
-def readDataframe(df):
-    """
-    Lectura de archivos parquet. Retorna un dataframe pyspark
-    """
-    df = df.drop(["DeviceId", "Sistema", "Timestamp", "TimestampUTC", "IdVerificacion"], axis = 1)
-    
-    df = df.rename(columns={'DispositivoId': 'dispositivoId',\
-                             'Nombre': 'parametro',\
-                             'Valor': 'valor',\
-                             'Unidad': 'unidad',\
-                             'EstampaTiempo': 'fecha'})
-    
-    return df
-
-
 def typeDF(pandasDF, typeData):
     """
     Separa dataframes por tipos de dato crudo, calibrado y validado. Retorna un dataframe
@@ -77,8 +62,7 @@ def returnDF(pandasDF, typeData):
     """
     Proceso completo. Devuelve el dataframe "crudo"
     """
-    tmpDF      = readDataframe(pandasDF)
-    typeFilter = typeDF(tmpDF, typeData)
+    typeFilter = typeDF(pandasDF, typeData)
     cleanedDF  = cleanDF(typeFilter)
 
     return cleanedDF
