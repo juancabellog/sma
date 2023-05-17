@@ -56,8 +56,6 @@ def promedios_hora(df):
     Salida: result(dataframe): hora(datetime), UfId(int), ProcesoId(int), parametro(str), valor(float)
     """
     df = df.copy()
-    
-    # Primero calculamos los promedios por minuto usando la función promedios_minuto()
     df = promedios_minuto(df)
 
     # Distinguir entre mediciones de gases y material particulado
@@ -127,17 +125,10 @@ def promedios_dia(df):
     return result
 
 
-
-
-
-
-    
-
-
 def promedios(df):
-    print('entra a promnedios:', len(data))
-    for row in data:
-        print('ufid:', row['UfId'], row['ProcesoId'], row['data'][0]['Parametros'][0]['nombre'])
+    return promedios_hora(df)
+
+
         
         
         
