@@ -1,7 +1,7 @@
 from aire.promedios_por_hora import promedios
 from datetime import datetime, timedelta
 from connect_db import getMongoConnection, getConnect, getProperty
-from aire.limpieza_y_validacion_pandas import returnDF
+from aire.limpieza_y_validacion_pandas import validaLimpia
 import pandas as pd
 
 def getHour(hora:str):
@@ -11,10 +11,10 @@ def getHour(hora:str):
 
 def getPropertyValue(object, property):
     try:
-        return object[property]
+        return object[property].strip()
     except:
         return 'nan'
-    
+
 class Item():
     def __init__(self, ufId, procesoId, parametro, fecha):
         self.id= str(ufId) + '_' + str(procesoId) + '_' + parametro + '_' + fecha.strftime('%Y%m%d%H%M%S')
@@ -22,7 +22,17 @@ class Item():
         self.procesoId = procesoId
         self.parametro = parametro
         self.fecha = fecha
-        
+
+def guadarPromedios(fechaInicial, fechaFinal, data):
+    with getConnect() as con:
+        cur = con.cursor()
+        cur.execute("delete from datos_promedios where dpr_fecha >= %s and dpr_fecha < %s", (fechaInicial.strftime('%Y-%m-%d %H:%M:%S'), fechaFinal.strftime('%Y-%m-%d %H:%M:%S')))
+        cur.close()
+
+        cur = con.cursor()
+        for index, row in data.iterrows():
+            cur.execute("insert into datos_promedios ()")
+
 def calculaPromedios(db, fechaInicial, fechaFinal):
     print(datetime.now(), fechaInicial, fechaFinal)
     #rows = []
@@ -45,10 +55,10 @@ def calculaPromedios(db, fechaInicial, fechaFinal):
                 n = n + 1
                 crudo = getPropertyValue(param, 'Crudo')
                 validado = getPropertyValue(param, 'Validados')
-                if (crudo != 'nan' or validado != 'nan'):
-                    
+                if (crudo == 'DC' or validado == 'DV'):
+
                     obj = Item(doc['UfId'], doc['ProcesoId'], param['nombre'], param['estampaTiempo'])
-                    
+
                     if (validado != 'nan'):
                         try:
                             index = objects[obj.id]
@@ -57,8 +67,15 @@ def calculaPromedios(db, fechaInicial, fechaFinal):
                             valor[index] = param['valor']
                             continue
                         except:
-                            objects[obj.id] = len(ufIds)                    
-                    
+                            objects[obj.id] = len(ufIds)
+
+                    else: #datos crudo
+                        try:
+                            index = objects[obj.id]
+                            continue
+                        except:
+                            objects[obj.id] = len(ufIds)
+
                     ufIds.append(obj.ufId)
                     ProcesoId.append(obj.procesoId)
                     dispositivoId.append(data['dispositivoId'])
@@ -69,7 +86,7 @@ def calculaPromedios(db, fechaInicial, fechaFinal):
                     Crudo.append(crudo)
                     Calibraciones.append(getPropertyValue(param, 'Calibraciones'))
                     Validados.append(validado)
-                
+
     if len(ufIds) > 0:
         dataFrame = pd.DataFrame({'UfId': ufIds, 'ProcesoId': ProcesoId, 'dispositivoId': dispositivoId
                              , 'parametro' : parametro, 'valor': valor, 'unidad' : unidad
@@ -77,10 +94,10 @@ def calculaPromedios(db, fechaInicial, fechaFinal):
                              , 'Calibraciones': Calibraciones
                              , 'Validados': Validados})
         print('entrada', n, len(dataFrame))
-        """ dataFrame = returnDF(dataFrame)"""
-        print('limpios', len(dataFrame))
-        result = promedios(dataFrame)        
-        print(result)
+        result = validaLimpia(dataFrame)
+        print('limpios', len(result))
+        result = promedios(result)
+        #guadarPromedios(fechaInicial, fechaFinal, result)
         print('salida',len(result))
         return 'OK'
     return 'NO DATA'
@@ -90,7 +107,7 @@ def calculaPromediosPorHora(fecha:str, hora:str):
     fechaInicial = None
     fechaFinal = None
     if (hora == ''):
-        fechaInicial = datetime.strptime(fecha + ' 00:00:00', '%Y-%m-%d %H:%M:%S')    
+        fechaInicial = datetime.strptime(fecha + ' 00:00:00', '%Y-%m-%d %H:%M:%S')
         fechaFinal = fechaInicial + timedelta(days=1)
     else:
         fechaInicial = datetime.strptime(fecha + ' ' + getHour(hora), '%Y-%m-%d %H:%M:%S')
@@ -104,7 +121,7 @@ def calculaUltimosPromedios():
         cur = conn.cursor()
         cur.execute("SELECT max(dpr_fecha) as fecha from datos_promedios")
         fechas = cur.fetchone()
-        cur.close()        
+        cur.close()
         fecha = fechas[0]
         if fecha == None:
             fecha = datetime.strptime(getProperty('MongoDatabaseSection', 'dlab.pid.mongodb.fechaminima') + ' 00:00:00', '%Y-%m-%d %H:%M:%S')
@@ -112,9 +129,9 @@ def calculaUltimosPromedios():
         print(fecha, now)
         with getMongoConnection() as mongo:
             db = mongo.ExportData
-            while fecha < now: 
+            while fecha < now:
                 fechaInicial = fecha
                 fecha = fecha + timedelta(hours=1)
                 calculaPromedios(db, fechaInicial, fecha)
     return 'OK'
-
+                    

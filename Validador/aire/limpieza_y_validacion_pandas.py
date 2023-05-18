@@ -3,25 +3,6 @@ import pandas as pd
 import numpy as np
 
 
-def typeDF(pandasDF, typeData):
-    """
-    Separa dataframes por tipos de dato crudo, calibrado y validado. Retorna un dataframe
-    """
-    df = None
-
-    if typeData == "Crudo":
-        # IMPORTANTE CORREGIR VALORES EN DB
-        df = pandasDF[pandasDF["Crudo"] == "DC "].drop(["Calibraciones", "Validados"], axis = 1)
-    elif typeData == "Calibraciones":
-        df = pandasDF[pandasDF["Calibraciones"] == "DP"].drop(["Crudo", "Validados"], axis = 1)
-    elif typeData == "Validados":
-        df = pandasDF[pandasDF["Validados"] == "DV"].drop(["Crudo", "Calibraciones"], axis = 1)
-    else:
-        print("typeData invalido")
-
-    return df
-
-
 def exploreValues(df, colList, attr=None):
     """
     Exploración de categorías de las columnas a excepción de valor y fecha. Retorna un diccionario.
@@ -54,12 +35,11 @@ def cleanDF(df):
     return df
 
 
-def returnDF(pandasDF, typeData):
+def validaLimpia(pandasDF):
     """
     Proceso completo. Devuelve el dataframe "crudo"
     """
-    typeFilter = typeDF(pandasDF, typeData)
-    cleanedDF  = cleanDF(typeFilter)
+    cleanedDF  = cleanDF(pandasDF)
 
     return cleanedDF
 
