@@ -44,9 +44,7 @@ def calculaPromedios(db, fechaInicial, fechaFinal):
     valor = []
     unidad = []
     fecha = []
-    Crudo = []
-    Calibraciones = []
-    Validados = []
+    tiposDatos = []
     objects = {}
     n = 0
     for doc in cursor:
@@ -58,18 +56,19 @@ def calculaPromedios(db, fechaInicial, fechaFinal):
                 if (crudo == 'DC' or validado == 'DV'):
 
                     obj = Item(doc['UfId'], doc['ProcesoId'], param['nombre'], param['estampaTiempo'])
-
+                    tipoDato = None
                     if (validado != 'nan'):
+                        tipoDato = validado
                         try:
                             index = objects[obj.id]
-                            Crudo[index] = 'nan'
-                            Validados[index] = validado
+                            tiposDatos[index] = tipoDato
                             valor[index] = param['valor']
                             continue
                         except:
                             objects[obj.id] = len(ufIds)
 
                     else: #datos crudo
+                        tipoDato = crudo
                         try:
                             index = objects[obj.id]
                             continue
@@ -83,16 +82,13 @@ def calculaPromedios(db, fechaInicial, fechaFinal):
                     valor.append(param['valor'])
                     unidad.append(param['unidad'])
                     fecha.append(obj.fecha)
-                    Crudo.append(crudo)
-                    Calibraciones.append(getPropertyValue(param, 'Calibraciones'))
-                    Validados.append(validado)
+                    tiposDatos.append(tipoDato)
 
     if len(ufIds) > 0:
         dataFrame = pd.DataFrame({'UfId': ufIds, 'ProcesoId': ProcesoId, 'dispositivoId': dispositivoId
                              , 'parametro' : parametro, 'valor': valor, 'unidad' : unidad
-                             , 'fecha': fecha, 'Crudo': Crudo
-                             , 'Calibraciones': Calibraciones
-                             , 'Validados': Validados})
+                             , 'fecha': fecha, 'tipoDato': tiposDatos})
+        
         print('entrada', n, len(dataFrame))
         result = validaLimpia(dataFrame)
         print('limpios', len(result))
