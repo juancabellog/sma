@@ -1,6 +1,7 @@
 from aire.promedios_por_hora import promedios
 from datetime import datetime, timedelta
 from connect_db import getMongoConnection, getConnect, getProperty
+from aire.limpieza_y_validacion_pandas import returnDF
 import pandas as pd
 
 def getHour(hora:str):
@@ -14,8 +15,16 @@ def getPropertyValue(object, property):
     except:
         return 'nan'
     
+class Item():
+    def __init__(self, ufId, procesoId, parametro, fecha):
+        self.id= str(ufId) + '_' + str(procesoId) + '_' + parametro + '_' + fecha.strftime('%Y%m%d%H%M%S')
+        self.ufId = ufId
+        self.procesoId = procesoId
+        self.parametro = parametro
+        self.fecha = fecha
+        
 def calculaPromedios(db, fechaInicial, fechaFinal):
-    print(fechaInicial, fechaFinal)
+    print(datetime.now(), fechaInicial, fechaFinal)
     #rows = []
     cursor = db.CA_ApiRest.find({'$and': [{ 'timestamp': { '$gte': fechaInicial }},{ 'timestamp': { '$lt': fechaFinal } }]} )
     ufIds = []
@@ -28,19 +37,38 @@ def calculaPromedios(db, fechaInicial, fechaFinal):
     Crudo = []
     Calibraciones = []
     Validados = []
+    objects = {}
+    n = 0
     for doc in cursor:
         for data in doc['data']:
             for param in data['Parametros']:
-                ufIds.append(doc['UfId'])
-                ProcesoId.append(doc['ProcesoId'])
-                dispositivoId.append(data['dispositivoId'])
-                parametro.append(param['nombre'])
-                valor.append(param['valor'])
-                unidad.append(param['unidad'])
-                fecha.append(param['estampaTiempo'])
-                Crudo.append(getPropertyValue(param, 'Crudo'))
-                Calibraciones.append(getPropertyValue(param, 'Calibraciones'))
-                Validados.append(getPropertyValue(param, 'Validados'))
+                n = n + 1
+                crudo = getPropertyValue(param, 'Crudo')
+                validado = getPropertyValue(param, 'Validados')
+                if (crudo != 'nan' or validado != 'nan'):
+                    
+                    obj = Item(doc['UfId'], doc['ProcesoId'], param['nombre'], param['estampaTiempo'])
+                    
+                    if (validado != 'nan'):
+                        try:
+                            index = objects[obj.id]
+                            Crudo[index] = 'nan'
+                            Validados[index] = validado
+                            valor[index] = param['valor']
+                            continue
+                        except:
+                            objects[obj.id] = len(ufIds)                    
+                    
+                    ufIds.append(obj.ufId)
+                    ProcesoId.append(obj.procesoId)
+                    dispositivoId.append(data['dispositivoId'])
+                    parametro.append(param['nombre'])
+                    valor.append(param['valor'])
+                    unidad.append(param['unidad'])
+                    fecha.append(obj.fecha)
+                    Crudo.append(crudo)
+                    Calibraciones.append(getPropertyValue(param, 'Calibraciones'))
+                    Validados.append(validado)
                 
     if len(ufIds) > 0:
         dataFrame = pd.DataFrame({'UfId': ufIds, 'ProcesoId': ProcesoId, 'dispositivoId': dispositivoId
@@ -48,13 +76,25 @@ def calculaPromedios(db, fechaInicial, fechaFinal):
                              , 'fecha': fecha, 'Crudo': Crudo
                              , 'Calibraciones': Calibraciones
                              , 'Validados': Validados})
-        promedios(dataFrame)        
+        print('entrada', n, len(dataFrame))
+        """ dataFrame = returnDF(dataFrame)"""
+        print('limpios', len(dataFrame))
+        result = promedios(dataFrame)        
+        print(result)
+        print('salida',len(result))
         return 'OK'
     return 'NO DATA'
 
 def calculaPromediosPorHora(fecha:str, hora:str):
-    fechaInicial = datetime.strptime(fecha + ' ' + getHour(hora), '%Y-%m-%d %H:%M:%S')
-    fechaFinal = fechaInicial + timedelta(hours=1)
+    print(hora)
+    fechaInicial = None
+    fechaFinal = None
+    if (hora == ''):
+        fechaInicial = datetime.strptime(fecha + ' 00:00:00', '%Y-%m-%d %H:%M:%S')    
+        fechaFinal = fechaInicial + timedelta(days=1)
+    else:
+        fechaInicial = datetime.strptime(fecha + ' ' + getHour(hora), '%Y-%m-%d %H:%M:%S')
+        fechaFinal = fechaInicial + timedelta(hours=1)
     with getMongoConnection() as mongo:
         db = mongo.ExportData
         return calculaPromedios(db, fechaInicial, fechaFinal)

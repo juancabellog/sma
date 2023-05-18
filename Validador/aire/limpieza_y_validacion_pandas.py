@@ -51,10 +51,6 @@ def cleanDF(df):
     df = df.dropna()
     df = df.drop_duplicates()
 
-    for cols in ['Crudo', 'Calibraciones', 'Validados']:
-        if cols not in df.columns:
-            df[cols] = np.nan
-
     return df
 
 
