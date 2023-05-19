@@ -26,12 +26,25 @@ class Item():
 def guadarPromedios(fechaInicial, fechaFinal, data):
     with getConnect() as con:
         cur = con.cursor()
-        cur.execute("delete from datos_promedios where dpr_fecha >= %s and dpr_fecha < %s", (fechaInicial.strftime('%Y-%m-%d %H:%M:%S'), fechaFinal.strftime('%Y-%m-%d %H:%M:%S')))
+        cur.execute("delete from datos_promedios where dpr_fecha >= %s and dpr_fecha < %s", [fechaInicial.strftime('%Y-%m-%d %H:%M:%S'), fechaFinal.strftime('%Y-%m-%d %H:%M:%S')])
         cur.close()
 
         cur = con.cursor()
+        print('nro de registros:', len(data))
+        n = 0
         for index, row in data.iterrows():
-            cur.execute("insert into datos_promedios ()")
+            n += 1
+            print(n, 'registro', row.UfId, row.ProcesoId, row.fecha.strftime('%Y-%m-%d %H:%M:%S'), row.parametro, row.valor)
+        
+        n = 0
+        for index, row in data.iterrows():
+            n += 1
+            try:
+                cur.execute("insert into datos_promedios (dpr_bdt_codigo, dpr_ufid, dpr_idproceso, dpr_fecha, dpr_prm_codigo, dpr_valor) values (%s, %s, %s, %s, %s, %s)", ['AIRE', row.UfId, row.ProcesoId, row.fecha.strftime('%Y-%m-%d %H:%M:%S'), row.parametro, row.valor])
+            except (Exception) as error:
+                print(n, 'ERROR en ', row.UfId, row.ProcesoId, row.fecha.strftime('%Y-%m-%d %H:%M:%S'), row.parametro, row.valor)
+                raise error
+        cur.close()
 
 def calculaPromedios(db, fechaInicial, fechaFinal):
     print(datetime.now(), fechaInicial, fechaFinal)
@@ -93,8 +106,9 @@ def calculaPromedios(db, fechaInicial, fechaFinal):
         result = validaLimpia(dataFrame)
         print('limpios', len(result))
         result = promedios(result)
-        #guadarPromedios(fechaInicial, fechaFinal, result)
         print('salida',len(result))
+        guadarPromedios(fechaInicial, fechaFinal, result)
+        print('guarda ok')
         return 'OK'
     return 'NO DATA'
 
