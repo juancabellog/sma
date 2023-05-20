@@ -62,12 +62,12 @@ def promedios_hora(df):
     df['tipo'] = df['parametro'].apply(tipo_medicion)
 
     # Separar el DataFrame en dos DataFrames diferentes para gases y material particulado
-    df_gas = df[df['tipo'] == 'gas']
-    df_particulado = df[df['tipo'] == 'PM']
+    df_gas = df[df['tipo'] == 'gas'].copy()
+    df_particulado = df[df['tipo'] == 'PM'].copy()
     
     #promedio de las mediciones realizadas durante cinco minutos consecutivos
     df_gas['fecha'] = df_gas['fecha'].dt.floor('5T')
-    df_gas = (df_gas.groupby(['fecha', 'UfId', 'ProcesoId', 'parametro'], as_index=False)\
+    df_gas = (df_gas.groupby(['fecha', 'UfId', 'ProcesoId', 'parametro'], as_index=False)
                     ['valor']
                     .mean())
                         
@@ -78,14 +78,14 @@ def promedios_hora(df):
                     .mean())
             
     #promedio de las mediciones realizadas durante 15 minutos consecutivos  
-    df_particulado['fecha'] = df_gas['fecha'].dt.floor('15T')
-    df_particulado = (df_gas.groupby(['fecha', 'UfId', 'ProcesoId', 'parametro'], as_index=False)
+    df_particulado['fecha'] = df_particulado['fecha'].dt.floor('15T')
+    df_particulado = (df_particulado.groupby(['fecha', 'UfId', 'ProcesoId', 'parametro'], as_index=False)
                     ['valor']
                     .mean())
                         
     #promedio horario material particulado
-    df_particulado['fecha'] = df_gas['fecha'].dt.floor('1H')
-    df_particulado = (df_gas.groupby(['fecha', 'UfId', 'ProcesoId', 'parametro'], as_index=False)
+    df_particulado['fecha'] = df_particulado['fecha'].dt.floor('1H')
+    df_particulado = (df_particulado.groupby(['fecha', 'UfId', 'ProcesoId', 'parametro'], as_index=False)
                     ['valor']
                     .mean())
     
