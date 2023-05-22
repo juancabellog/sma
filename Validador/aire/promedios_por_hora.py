@@ -16,8 +16,8 @@ def promedios_minuto(df):
 
     # Agrupar por 'fecha_min', 'UfId', 'ProcesoId' y calcular la media de la columna 'valor'
     df = (df.groupby(['fecha', 'UfId', 'ProcesoId', 'parametro'], as_index=False)
-                   ['valor']
-                   .mean())
+                   .agg(valor=('valor', 'mean'),\
+                        dataPoint_count=('valor', 'count')))
 
     return df
         
@@ -53,7 +53,7 @@ def promedios_hora(df):
     siguiendo el criterio del Decreto 61 para cada tipo de medición.
     
     Entrada: df(dataframe): Calibraciones(str), Crudo(str), UfId(int), ProcesoId(int), fecha(datetime), parametro(str), unidad(str), valor(float)
-    Salida: result(dataframe): hora(datetime), UfId(int), ProcesoId(int), parametro(str), valor(float)
+    Salida: result(dataframe): hora(datetime), UfId(int), ProcesoId(int), parametro(str), valor(float), dataPoint_count(int)
     """
     df = df.copy()
     df = promedios_minuto(df)
@@ -68,26 +68,26 @@ def promedios_hora(df):
     #promedio de las mediciones realizadas durante cinco minutos consecutivos
     df_gas['fecha'] = df_gas['fecha'].dt.floor('5T')
     df_gas = (df_gas.groupby(['fecha', 'UfId', 'ProcesoId', 'parametro'], as_index=False)
-                    ['valor']
-                    .mean())
+                    .agg(valor=('valor', 'mean'),\
+                        dataPoint_count=('dataPoint_count', 'sum')))
                         
     #promedio horario gas
     df_gas['fecha'] = df_gas['fecha'].dt.floor('1H')
     df_gas = (df_gas.groupby(['fecha', 'UfId', 'ProcesoId', 'parametro'], as_index=False)
-                    ['valor']
-                    .mean())
+                    .agg(valor=('valor', 'mean'),\
+                        dataPoint_count=('dataPoint_count', 'sum')))
             
     #promedio de las mediciones realizadas durante 15 minutos consecutivos  
     df_particulado['fecha'] = df_particulado['fecha'].dt.floor('15T')
     df_particulado = (df_particulado.groupby(['fecha', 'UfId', 'ProcesoId', 'parametro'], as_index=False)
-                    ['valor']
-                    .mean())
+                    .agg(valor=('valor', 'mean'),\
+                        dataPoint_count=('dataPoint_count', 'sum')))
                         
     #promedio horario material particulado
     df_particulado['fecha'] = df_particulado['fecha'].dt.floor('1H')
     df_particulado = (df_particulado.groupby(['fecha', 'UfId', 'ProcesoId', 'parametro'], as_index=False)
-                    ['valor']
-                    .mean())
+                    .agg(valor=('valor', 'mean'),\
+                        dataPoint_count=('dataPoint_count', 'sum')))
     
     # Combinar los dos DataFrames de resultados en uno solo
     result = pd.concat([df_gas, df_particulado])
