@@ -1,6 +1,8 @@
 
 import pandas as pd
 import numpy as np
+from connect_db import getConnect
+
 
 
 def exploreValues(df, colList, attr=None):
@@ -24,7 +26,15 @@ def exploreValues(df, colList, attr=None):
 
     return result
 
-
+def getLimites():
+    with getConnect() as con:
+        cur = con.cursor()
+        cur.execute("select lmt_rgd_id, lmt_est_id, lmt_dispositivo, lmt_parametro, lmt_unidad_medida, lmt_minimo, lmt_maximo from limites_aire")
+        df = pd.DataFrame(cur.fetchall())
+        cur.close()
+        df.columns = ['ufId', 'idProceso', 'idDispositivo', 'parametro', 'unidadMedida', 'valorMinimo', 'valorMaximo']
+        return df
+    
 def cleanDF(df):
     """
     Limpieza de NaN y duplicados. Retorna un dataframe
