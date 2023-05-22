@@ -29,10 +29,45 @@ def cleanDF(df):
     """
     Limpieza de NaN y duplicados. Retorna un dataframe
     """
-    df = df.dropna()
-    df = df.drop_duplicates()
 
-    return df
+    if df.isna().sum().sum() > 0:   # cantidad de NaN
+        df = df.dropna()
+
+    if df.duplicated().sum() > 0:   # cantidad de duplicados
+        df = df.drop_duplicates()
+
+    # promedio de valor para distintos dispositivos en la misma fecha
+    finalDF    = pd.DataFrame(columns = df.columns)
+    lstDFs     = []
+    listProcId = df['ProcesoId'].unique()
+
+    for procId in listProcId:
+        dfProcId   = df[df['ProcesoId'] == procId]
+        listParams = dfProcId['parametro'].unique()
+
+        for param in listParams:
+            dfParam = dfProcId[dfProcId['parametro'] == param]
+            dateList = list(set(dfParam['fecha'].tolist()))
+
+            # print(dfParam)
+
+            for date in dateList:
+                dfDate = dfParam[dfParam['fecha'] == date]
+                if dfDate['fecha'].shape[0] > 1:
+                    # print(dfDate)
+                    dfValid    = dfDate[dfDate['tipoDato'] == 'DV']
+                    listDispId = dfValid['dispositivoId'].unique()
+
+                    if dfValid.shape[0] > 1 and len(listDispId) > 1:
+                        # print(dfValid)
+                        prom    = dfValid['valor'].mean()
+                        dfValid = dfValid.iloc[[0]]
+                        dfValid['valor'] = prom
+                        # print(dfValid)
+                        lstDFs.append(dfValid)
+
+                else:
+                    lstDFs.append(dfDate)
 
 
 def validaLimpia(pandasDF):
