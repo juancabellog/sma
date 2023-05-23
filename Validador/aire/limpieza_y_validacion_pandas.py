@@ -35,6 +35,7 @@ def getLimites():
         df.columns = ['ufId', 'idProceso', 'idDispositivo', 'parametro', 'unidadMedida', 'valorMinimo', 'valorMaximo']
         return df
     
+    
 def cleanDF(df):
     """
     Limpieza de NaN y duplicados. Retorna un dataframe
@@ -42,6 +43,7 @@ def cleanDF(df):
 
     if df.isna().sum().sum() > 0:   # cantidad de NaN
         df = df.dropna()
+        np.nan
 
     if df.duplicated().sum() > 0:   # cantidad de duplicados
         df = df.drop_duplicates()
